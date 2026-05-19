@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps API Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* PART 1: API Key Input */
+        .part-1 {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        /* PART 2: Discovery Results */
+        .part-2 {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .part-2.active {
+            display: block;
+        }
+
+        .results-header {
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .api-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+        }
+
+        .api-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .api-card.vulnerable {
+            border-left-color: #ff6b6b;
+        }
+
+        .api-card.safe {
+            border-left-color: #51cf66;
+            opacity: 0.7;
+        }
+
+        .api-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .api-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-vulnerable {
+            background: #ffe0e0;
+            color: #d32f2f;
+        }
+
+        .status-safe {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .api-cost {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .test-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .test-btn:hover {
+            background: #5568d3;
+        }
+
+        /* PART 3: Testing Interface */
+        .part-3 {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .part-3.active {
+            display: block;
+        }
+
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .test-header h2 {
+            color: #333;
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #d0d0d0;
+        }
+
+        .test-form {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .test-result {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-indicator.vulnerable {
+            background: #ff6b6b;
+        }
+
+        .status-indicator.safe {
+            background: #51cf66;
+        }
+
+        .result-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-details {
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            background: #f5f5f5;
+            padding: 8px;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+
+        .error {
+            color: #d32f2f;
+            padding: 15px;
+            background: #ffebee;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #999;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗺️ Google Maps API Scanner</h1>
+            <p class="subtitle">Discover which APIs are exploitable with your key</p>
+        </header>
+
+        <!-- PART 1: API Key Input -->
+        <div class="part-1">
+            <h2>Step 1: Enter Your API Key</h2>
+            <div class="input-group">
+                <input
+                    type="text"
+                    id="apiKeyInput"
+                    placeholder="Paste your Google Maps API key here..."
+                >
+                <button id="scanBtn" onclick="scanApiKey()">
+                    <span id="scanBtnText">Scan APIs</span>
+                </button>
+            </div>
+            <p class="info-text">ℹ️ Your API key is only used to test the endpoints and is not stored anywhere.</p>
+        </div>
+
+        <!-- PART 2: Discovery Results -->
+        <div class="part-2" id="part2">
+            <div class="results-header">
+                <h2>Step 2: Exploitable APIs Found</h2>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="totalCount">0</div>
+                        <div class="stat-label">Total APIs Tested</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="vulnerableCount">0</div>
+                        <div class="stat-label">Exploitable APIs</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="api-grid" id="apiGrid"></div>
+        </div>
+
+        <!-- PART 3: Testing Interface -->
+        <div class="part-3" id="part3">
+            <div class="test-header">
+                <h2 id="testTitle">Test API</h2>
+                <button class="back-btn" onclick="backToResults()">← Back to Results</button>
+            </div>
+
+            <div class="test-form" id="testForm"></div>
+
+            <button id="testExecuteBtn" onclick="executeTest()" style="width: 100%; padding: 12px; font-size: 1em;">
+                Run Test
+            </button>
+
+            <div id="testResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentApiKey = '';
+        let discoveredApis = [];
+        let selectedApi = null;
+
+        async function scanApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+
+            if (!apiKey) {
+                alert('Please enter an API key');
+                return;
+            }
+
+            currentApiKey = apiKey;
+            const btn = document.getElementById('scanBtn');
+            const btnText = document.getElementById('scanBtnText');
+
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading"></span>Scanning...';
+
+            try {
+                const response = await fetch(`/api/discovery?api_key=${encodeURIComponent(apiKey)}`);
+                const data = await response.json();
+
+                discoveredApis = data.vulnerable_apis.concat(data.safe_apis);
+
+                // Update stats
+                document.getElementById('totalCount').textContent = data.total_tested;
+                document.getElementById('vulnerableCount').textContent = data.vulnerable_count;
+
+                // Display results
+                displayResults(data);
+
+                // Test JavaScript API by rendering it
+
+                // Show part 2
+                document.getElementById('part2').classList.add('active');
+                document.getElementById('part2').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                alert('Error scanning APIs: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btnText.innerHTML = 'Scan APIs';
+            }
+        }
+
+        function displayResults(data) {
+            const grid = document.getElementById('apiGrid');
+            grid.innerHTML = '';
+
+            const allApis = data.vulnerable_apis.concat(data.safe_apis);
+
+            allApis.forEach(api => {
+                const card = document.createElement('div');
+                card.className = `api-card ${api.is_vulnerable ? 'vulnerable' : 'safe'}`;
+
+                const statusClass = api.is_vulnerable ? 'status-vulnerable' : 'status-safe';
+                const statusText = api.is_vulnerable ? '🔓 Exploitable' : '🔒 Safe';
+
+                card.innerHTML = `
+                    <div class="api-name">${api.name}</div>
+                    <div class="api-status ${statusClass}">${statusText}</div>
+                    <div class="api-reason" style="color: #666; font-size: 0.9em; margin-bottom: 10px;">${api.reason}</div>
+                    ${api.cost ? `<div class="api-cost">💰 ${api.cost}</div>` : ''}
+                    ${api.is_vulnerable ? `<button class="test-btn" onclick="openTestInterface('${api.name}')">Test This API</button>` : ''}
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function openTestInterface(apiName) {
+            selectedApi = discoveredApis.find(a => a.name === apiName);
+            document.getElementById('testTitle').textContent = `Test: ${apiName}`;
+
+            // Generate form based on API
+            generateTestForm(apiName);
+
+            // Show part 3
+            document.getElementById('part3').classList.add('active');
+            document.getElementById('part3').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateTestForm(apiName) {
+            const formDiv = document.getElementById('testForm');
+            let formHtml = '';
+
+            // Default Bangalore coordinates
+            const bangaloreCoords = { lat: 12.9716, lng: 77.5946 };
+            const koramangalaCoords = { lat: 12.9352, lng: 77.6245 };
+
+            const formConfigs = {
+                'Static Map API': [
+                    { name: 'center_lat', label: 'Center Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'center_lng', label: 'Center Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
+                    { name: 'zoom', label: 'Zoom Level (1-21)', type: 'number', value: 13, min: 1, max: 21 },
+                    { name: 'size', label: 'Image Size (WIDTHxHEIGHT)', type: 'text', value: '400x400' }
+                ],
+                'Street View API': [
+                    { name: 'location_lat', label: 'Location Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'location_lng', label: 'Location Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
+                    { name: 'heading', label: 'Heading (0-360°)', type: 'number', value: 235, min: 0, max: 360 },
+                    { name: 'pitch', label: 'Pitch (-90 to 90°)', type: 'number', value: 10, min: -90, max: 90 }
+                ],
+                'Directions API': [
+                    { name: 'origin', label: 'Origin Location', type: 'text', value: 'Indiranagar, Bangalore' },
+                    { name: 'destination', label: 'Destination Location', type: 'text', value: 'Koramangala, Bangalore' }
+                ],
+                'Geocode API': [
+                    { name: 'address', label: 'Address to Geocode', type: 'text', value: 'Bangalore, India' }
+                ],
+                'Distance Matrix API': [
+                    { name: 'origin_lat', label: 'Origin Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'origin_lng', label: 'Origin Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
+                    { name: 'dest_lat', label: 'Destination Latitude', type: 'number', value: koramangalaCoords.lat, step: '0.0001' },
+                    { name: 'dest_lng', label: 'Destination Longitude', type: 'number', value: koramangalaCoords.lng, step: '0.0001' }
+                ],
+                'Find Place From Text API': [
+                    { name: 'query', label: 'Search Query', type: 'text', value: 'Restaurants in Bangalore' }
+                ],
+                'Autocomplete API': [
+                    { name: 'input', label: 'Search Input', type: 'text', value: 'Indi' }
+                ],
+                'Elevation API': [
+                    { name: 'latitude', label: 'Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'longitude', label: 'Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
+                ],
+                'Timezone API': [
+                    { name: 'latitude', label: 'Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'longitude', label: 'Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
+                ],
+                'Nearest Roads API': [
+                    { name: 'point_lat', label: 'Point Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'point_lng', label: 'Point Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
+                ],
+                'Nearby Search API': [
+                    { name: 'latitude', label: 'Search Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'longitude', label: 'Search Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
+                    { name: 'radius', label: 'Search Radius (meters)', type: 'number', value: 1000, min: 1 },
+                    { name: 'type', label: 'Place Type', type: 'text', value: 'restaurant' }
+                ],
+                'Text Search API': [
+                    { name: 'query', label: 'Search Query', type: 'text', value: 'Hotels in Bangalore' }
+                ],
+                'Geolocation API': [
+                    { name: 'consider_ip', label: 'Consider IP Address (true/false)', type: 'text', value: 'true' }
+                ],
+                'Address Validation API': [
+                    { name: 'address', label: 'Address to Validate', type: 'text', value: '1600 Amphitheatre Parkway, Mountain View, CA' }
+                ],
+                'Air Quality API': [
+                    { name: 'latitude', label: 'Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'longitude', label: 'Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
+                ],
+                'Routes API (computeRoutes)': [
+                    { name: 'origin_lat', label: 'Origin Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'origin_lng', label: 'Origin Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
+                    { name: 'dest_lat', label: 'Destination Latitude', type: 'number', value: koramangalaCoords.lat, step: '0.0001' },
+                    { name: 'dest_lng', label: 'Destination Longitude', type: 'number', value: koramangalaCoords.lng, step: '0.0001' }
+                ],
+                'Routes API (computeRouteMatrix)': [
+                    { name: 'origin_lat', label: 'Origin Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'origin_lng', label: 'Origin Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
+                    { name: 'dest_lat', label: 'Destination Latitude', type: 'number', value: koramangalaCoords.lat, step: '0.0001' },
+                    { name: 'dest_lng', label: 'Destination Longitude', type: 'number', value: koramangalaCoords.lng, step: '0.0001' }
+                ],
+                'Place Details API': [
+                    { name: 'place_id', label: 'Place ID', type: 'text', value: 'ChIJN1t_tDeuEmsRUsoyG83frY4' }
+                ],
+                'Gemini Files API': [
+                    { name: 'note', label: 'ℹ️ Lists uploaded files (GET Request)', type: 'text', value: 'No parameters needed', disabled: true }
+                ],
+                'Speed Limits API': [
+                    { name: 'latitude', label: 'Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'longitude', label: 'Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
+                ],
+                // 'Places Photo API': [
+                //     { name: 'photo_reference', label: 'Photo Reference', type: 'text', value: 'CmRaAAAAzqtQzNDPIFI-E0KwXo9lCf-58F8eBLqDx-cYdYPEOr1iJTZLqIRqfqMb0M8lSm-gXjkJL8HVfZrOqPR0UR7U_-qeUy-B1fEFT1nG0YmC3nXvJCx4vYu6H-20Cxx2h5fh' }
+                // ],
+                'Routes API (computeRouteMatrix)': [
+                    { name: 'origin_lat', label: 'Origin Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'origin_lng', label: 'Origin Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
+                    { name: 'dest_lat', label: 'Destination Latitude', type: 'number', value: koramangalaCoords.lat, step: '0.0001' },
+                    { name: 'dest_lng', label: 'Destination Longitude', type: 'number', value: koramangalaCoords.lng, step: '0.0001' }
+                ],
+                'Aerial View API': [
+                    { name: 'latitude', label: 'Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
+                    { name: 'longitude', label: 'Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
+                ]
+            };
+
+            const config = formConfigs[apiName] || [
+                { name: 'custom_param', label: 'Custom Parameter', type: 'text', value: '' }
+            ];
+
+            config.forEach(field => {
+                formHtml += `
+                    <div class="form-group">
+                        <label for="${field.name}">${field.label}</label>
+                        <input
+                            type="${field.type}"
+                            id="${field.name}"
+                            name="${field.name}"
+                            value="${field.value || ''}"
+                            ${field.step ? `step="${field.step}"` : ''}
+                            ${field.min !== undefined ? `min="${field.min}"` : ''}
+                            ${field.max !== undefined ? `max="${field.max}"` : ''}
+                            ${field.disabled ? 'disabled' : ''}
+                        >
+                    </div>
+                `;
+            });
+
+            formDiv.innerHTML = formHtml;
+        }
+
+        async function executeTest() {
+            if (!selectedApi) return;
+
+            const btn = document.getElementById('testExecuteBtn');
+            const resultDiv = document.getElementById('testResult');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>Testing...';
+            resultDiv.innerHTML = '';
+
+            try {
+                // Collect form data from all inputs
+                const inputs = document.getElementById('testForm').querySelectorAll('input');
+                const params = new URLSearchParams();
+                params.append('api_key', currentApiKey);
+
+                inputs.forEach(input => {
+                    if (input.value && !input.disabled) {
+                        params.append(input.name, input.value);
+                    }
+                });
+
+                // Determine if this is a POST endpoint
+                const postEndpoints = ['Geolocation API', 'Address Validation API', 'Air Quality API'];
+                const isPostEndpoint = postEndpoints.includes(selectedApi.name);
+
+                // Map API names to endpoint paths
+                const endpointMap = {
+                    'Static Map API': 'staticmap',
+                    'Street View API': 'streetview',
+                    'Directions API': 'directions',
+                    'Geocode API': 'geocode',
+                    'Distance Matrix API': 'distancematrix',
+                    'Find Place From Text API': 'places/findplacefromtext',
+                    'Autocomplete API': 'places/autocomplete',
+                    'Elevation API': 'elevation',
+                    'Timezone API': 'timezone',
+                    'Nearest Roads API': 'roads/nearestroads',
+                    'Nearby Search API': 'places/nearbysearch',
+                    'Text Search API': 'places/textsearch',
+                    'Geolocation API': 'geolocation',
+                    'Address Validation API': 'addressvalidation',
+                    'Air Quality API': 'airquality',
+                    'Routes API (computeRoutes)': 'routes/computeroutes',
+                    'Routes API (computeRouteMatrix)': 'routes/computeroutematrix',
+                    'Place Details API': 'places/placedetails',
+                    'Gemini Files API': 'gemini/files',
+                    'Speed Limits API': 'roads/speedlimit',
+                    'Places Photo API': 'places/photo',
+                    'Aerial View API': 'aerialview',
+                };
+
+                const endpoint = endpointMap[selectedApi.name] || selectedApi.name.toLowerCase().replace(/\s+/g, '');
+                const url = `/api/test/${endpoint}?${params}`;
+
+                console.log('Testing API:', selectedApi.name);
+                console.log('Endpoint:', endpoint);
+                console.log('URL:', url);
+
+                let response;
+                if (isPostEndpoint) {
+                    response = await fetch(url, { method: 'POST' });
+                } else {
+                    response = await fetch(url);
+                }
+
+                const result = await response.json();
+                console.log('Response:', result);
+                displayTestResult(result);
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Run Test';
+            }
+        }
+
+        function displayTestResult(result) {
+            const resultDiv = document.getElementById('testResult');
+            const statusClass = result.is_vulnerable ? 'vulnerable' : 'safe';
+            const statusIcon = result.is_vulnerable ? '🔓' : '🔒';
+
+            let html = `
+                <div class="test-result">
+                    <div class="result-status">
+                        <div class="status-indicator ${statusClass}"></div>
+                        <div class="result-text">${statusIcon} ${result.is_vulnerable ? 'Exploitable' : 'Safe'}</div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">${result.reason}</div>
+                        </div>
+            `;
+
+            if (result.poc_url) {
+                html += `
+                    <div class="detail-item">
+                        <div class="detail-label">PoC URL</div>
+                        <div class="detail-value"><a href="${result.poc_url}" target="_blank">${result.poc_url}</a></div>
+                    </div>
+                `;
+            }
+
+            if (result.poc_curl) {
+                html += `
+                    <div class="detail-item">
+                        <div class="detail-label">cURL Command</div>
+                        <div class="detail-value">${result.poc_curl}</div>
+                    </div>
+                `;
+            }
+
+            if (result.cost) {
+                html += `
+                    <div class="detail-item">
+                        <div class="detail-label">Cost</div>
+                        <div class="detail-value">${result.cost}</div>
+                    </div>
+                `;
+            }
+
+            html += '</div></div>';
+            resultDiv.innerHTML = html;
+        }
+
+        function backToResults() {
+            document.getElementById('part3').classList.remove('active');
+            document.getElementById('part2').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
