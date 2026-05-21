@@ -647,15 +647,6 @@
                     { name: 'latitude', label: 'Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
                     { name: 'longitude', label: 'Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
                 ],
-                // 'Places Photo API': [
-                //     { name: 'photo_reference', label: 'Photo Reference', type: 'text', value: 'CmRaAAAAzqtQzNDPIFI-E0KwXo9lCf-58F8eBLqDx-cYdYPEOr1iJTZLqIRqfqMb0M8lSm-gXjkJL8HVfZrOqPR0UR7U_-qeUy-B1fEFT1nG0YmC3nXvJCx4vYu6H-20Cxx2h5fh' }
-                // ],
-                'Routes API (computeRouteMatrix)': [
-                    { name: 'origin_lat', label: 'Origin Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
-                    { name: 'origin_lng', label: 'Origin Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' },
-                    { name: 'dest_lat', label: 'Destination Latitude', type: 'number', value: koramangalaCoords.lat, step: '0.0001' },
-                    { name: 'dest_lng', label: 'Destination Longitude', type: 'number', value: koramangalaCoords.lng, step: '0.0001' }
-                ],
                 'Aerial View API': [
                     { name: 'latitude', label: 'Latitude', type: 'number', value: bangaloreCoords.lat, step: '0.0001' },
                     { name: 'longitude', label: 'Longitude', type: 'number', value: bangaloreCoords.lng, step: '0.0001' }
@@ -735,16 +726,11 @@
                     'Place Details API': 'places/placedetails',
                     'Gemini Files API': 'gemini/files',
                     'Speed Limits API': 'roads/speedlimit',
-                    'Places Photo API': 'places/photo',
                     'Aerial View API': 'aerialview',
                 };
 
                 const endpoint = endpointMap[selectedApi.name] || selectedApi.name.toLowerCase().replace(/\s+/g, '');
                 const url = `/api/test/${endpoint}?${params}`;
-
-                console.log('Testing API:', selectedApi.name);
-                console.log('Endpoint:', endpoint);
-                console.log('URL:', url);
 
                 let response;
                 if (isPostEndpoint) {
@@ -754,7 +740,6 @@
                 }
 
                 const result = await response.json();
-                console.log('Response:', result);
                 displayTestResult(result);
             } catch (error) {
                 resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;

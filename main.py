@@ -122,10 +122,10 @@ def test_staticmap(api_key: str ,
 
 @app.get("/api/test/streetview", response_model=APITest)
 def test_streetview(api_key: str = Query(..., description="Google Maps API Key"),
-                   location_lat: float = Query(12.9716),
-                   location_lng: float = Query(77.5946),
-                   heading: int = Query(235),
-                   pitch: int = Query(10)):
+                   location_lat: float = 12.9716,
+                   location_lng: float = 77.5946,
+                   heading: int = 235,
+                   pitch: int = 10):
     """Test Street View API"""
     url = f"https://maps.googleapis.com/maps/api/streetview?size=400x400&location={location_lat},{location_lng}&fov=90&heading={heading}&pitch={pitch}&key={api_key}"
     try:
@@ -158,8 +158,8 @@ def test_streetview(api_key: str = Query(..., description="Google Maps API Key")
 
 @app.get("/api/test/directions", response_model=APITest)
 def test_directions(api_key: str = Query(..., description="Google Maps API Key"),
-                   origin: str = Query("Indiranagar, Bangalore"),
-                   destination: str = Query("Koramangala, Bangalore")):
+                   origin: str = "Indiranagar, Bangalore",
+                   destination: str = "Koramangala, Bangalore"):
     """Test Directions API"""
     url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&key={api_key}"
     try:
@@ -186,7 +186,7 @@ def test_directions(api_key: str = Query(..., description="Google Maps API Key")
 
 @app.get("/api/test/geocode", response_model=APITest)
 def test_geocode(api_key: str = Query(..., description="Google Maps API Key"),
-                address: str = Query("Bangalore, India")):
+                address: str = "Bangalore, India"):
     """Test Geocode API"""
     params = {
         "address": address,
@@ -216,9 +216,13 @@ def test_geocode(api_key: str = Query(..., description="Google Maps API Key"),
 
 
 @app.get("/api/test/distancematrix", response_model=APITest)
-def test_distancematrix(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Distance Matrix API - Bangalore locations"""
-    url = f"https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=12.9716,77.5946&destinations=12.9352,77.6245|13.0827,80.2707&key={api_key}"
+def test_distancematrix(api_key: str = Query(..., description="Google Maps API Key"),
+                       origin_lat: float = 12.9716,
+                       origin_lng: float = 77.5946,
+                       dest_lat: float = 12.9352,
+                       dest_lng: float = 77.6245):
+    """Test Distance Matrix API"""
+    url = f"https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins={origin_lat},{origin_lng}&destinations={dest_lat},{dest_lng}&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "error_message" not in response.text:
@@ -244,9 +248,10 @@ def test_distancematrix(api_key: str = Query(..., description="Google Maps API K
 
 
 @app.get("/api/test/places/findplacefromtext", response_model=APITest)
-def test_places_findplacefromtext(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Find Place From Text API - Bangalore"""
-    url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=Restaurants+in+Bangalore&inputtype=textquery&fields=photos,formatted_address,name,rating&key={api_key}"
+def test_places_findplacefromtext(api_key: str = Query(..., description="Google Maps API Key"),
+                                  query: str = "Restaurants in Bangalore"):
+    """Test Find Place From Text API"""
+    url = f"https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input={query}&inputtype=textquery&fields=photos,formatted_address,name,rating&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "error_message" not in response.text:
@@ -272,9 +277,10 @@ def test_places_findplacefromtext(api_key: str = Query(..., description="Google 
 
 
 @app.get("/api/test/places/autocomplete", response_model=APITest)
-def test_places_autocomplete(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Autocomplete API - Bangalore"""
-    url = f"https://maps.googleapis.com/maps/api/place/autocomplete/json?input=Indi&types=%28cities%29&key={api_key}"
+def test_places_autocomplete(api_key: str = Query(..., description="Google Maps API Key"),
+                             input: str = "Indi"):
+    """Test Autocomplete API"""
+    url = f"https://maps.googleapis.com/maps/api/place/autocomplete/json?input={input}&types=%28cities%29&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "error_message" not in response.text:
@@ -300,12 +306,11 @@ def test_places_autocomplete(api_key: str = Query(..., description="Google Maps 
 
 
 @app.get("/api/test/elevation", response_model=APITest)
-def test_elevation(api_key: str = Query(..., description="Google Maps API Key")):
+def test_elevation(api_key: str = Query(..., description="Google Maps API Key"),
+                  latitude: float = 12.9716,
+                  longitude: float = 77.5946):
     """Test Elevation API"""
-    params = {
-        "key": api_key
-    }
-    url = f"https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536%2C-104.9847034&{urlencode(params)}"
+    url = f"https://maps.googleapis.com/maps/api/elevation/json?locations={latitude},{longitude}&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "error_message" not in response.text:
@@ -329,9 +334,11 @@ def test_elevation(api_key: str = Query(..., description="Google Maps API Key"))
 
 
 @app.get("/api/test/timezone", response_model=APITest)
-def test_timezone(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Timezone API - Bangalore"""
-    url = f"https://maps.googleapis.com/maps/api/timezone/json?location=12.9716,77.5946&timestamp=1331161200&key={api_key}"
+def test_timezone(api_key: str = Query(..., description="Google Maps API Key"),
+                 latitude: float = 12.9716,
+                 longitude: float = 77.5946):
+    """Test Timezone API"""
+    url = f"https://maps.googleapis.com/maps/api/timezone/json?location={latitude},{longitude}&timestamp=1331161200&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "errorMessage" not in response.text and "error_message" not in response.text:
@@ -355,9 +362,11 @@ def test_timezone(api_key: str = Query(..., description="Google Maps API Key")):
 
 
 @app.get("/api/test/roads/nearestroads", response_model=APITest)
-def test_roads_nearestroads(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Nearest Roads API - Bangalore area"""
-    url = f"https://roads.googleapis.com/v1/nearestRoads?points=12.9716,77.5946|12.9352,77.6245&key={api_key}"
+def test_roads_nearestroads(api_key: str = Query(..., description="Google Maps API Key"),
+                            point_lat: float = 12.9716,
+                            point_lng: float = 77.5946):
+    """Test Nearest Roads API"""
+    url = f"https://roads.googleapis.com/v1/nearestRoads?points={point_lat},{point_lng}&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "error" not in response.text:
@@ -383,9 +392,13 @@ def test_roads_nearestroads(api_key: str = Query(..., description="Google Maps A
 
 
 @app.get("/api/test/places/nearbysearch", response_model=APITest)
-def test_places_nearbysearch(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Nearby Search API - Bangalore"""
-    url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=12.9716,77.5946&radius=1000&types=restaurant&key={api_key}"
+def test_places_nearbysearch(api_key: str = Query(..., description="Google Maps API Key"),
+                             latitude: float = 12.9716,
+                             longitude: float = 77.5946,
+                             radius: int = 1000,
+                             type: str = "restaurant"):
+    """Test Nearby Search API"""
+    url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={latitude},{longitude}&radius={radius}&types={type}&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "error_message" not in response.text:
@@ -411,9 +424,10 @@ def test_places_nearbysearch(api_key: str = Query(..., description="Google Maps 
 
 
 @app.get("/api/test/places/textsearch", response_model=APITest)
-def test_places_textsearch(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Text Search API - Bangalore"""
-    url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query=hotels+in+Bangalore&key={api_key}"
+def test_places_textsearch(api_key: str = Query(..., description="Google Maps API Key"),
+                           query: str = "hotels in Bangalore"):
+    """Test Text Search API"""
+    url = f"https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}&key={api_key}"
     try:
         response = requests.get(url, **_REQUEST_KWARGS)
         if "error_message" not in response.text:
@@ -440,7 +454,7 @@ def test_places_textsearch(api_key: str = Query(..., description="Google Maps AP
 
 @app.post("/api/test/geolocation", response_model=APITest)
 def test_geolocation(api_key: str = Query(..., description="Google Maps API Key"),
-                    consider_ip: str = Query("true")):
+                    consider_ip: str = "true"):
     """Test Geolocation API"""
     url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={api_key}"
 
@@ -483,12 +497,13 @@ def test_geolocation(api_key: str = Query(..., description="Google Maps API Key"
 
 
 @app.post("/api/test/addressvalidation", response_model=APITest)
-def test_addressvalidation(api_key: str = Query(..., description="Google Maps API Key")):
-    """Test Address Validation API - Bangalore address"""
+def test_addressvalidation(api_key: str = Query(..., description="Google Maps API Key"),
+                           address: str = "1600 Amphitheatre Pkwy, Mountain View, CA"):
+    """Test Address Validation API"""
     url = f"https://addressvalidation.googleapis.com/v1:validateAddress?key={api_key}"
     try:
         postdata = json.dumps(
-            {"address": {"regionCode": "US", "addressLines": ["1600 Amphitheatre Pkwy, Mountain View, CA"]}}
+            {"address": {"regionCode": "US", "addressLines": [address]}}
         )
         response = requests.post(
             url,
@@ -520,11 +535,13 @@ def test_addressvalidation(api_key: str = Query(..., description="Google Maps AP
 
 
 @app.post("/api/test/airquality", response_model=APITest)
-def test_airquality(api_key: str = Query(..., description="Google Maps API Key")):
+def test_airquality(api_key: str = Query(..., description="Google Maps API Key"),
+                   latitude: float = 12.9716,
+                   longitude: float = 77.5946):
     """Test Air Quality API"""
     url = f"https://airquality.googleapis.com/v1/currentConditions:lookup?key={api_key}"
     try:
-        postdata = json.dumps({"location": {"latitude": 37.419734, "longitude": -122.0827784}})
+        postdata = json.dumps({"location": {"latitude": latitude, "longitude": longitude}})
         response = requests.post(
             url,
             data=postdata,
@@ -553,7 +570,11 @@ def test_airquality(api_key: str = Query(..., description="Google Maps API Key")
 
 
 @app.get("/api/test/routes/computeroutes", response_model=APITest)
-def test_routes_computeroutes(api_key: str = Query(..., description="Google Maps API Key")):
+def test_routes_computeroutes(api_key: str = Query(..., description="Google Maps API Key"),
+                              origin_lat: float = 12.9716,
+                              origin_lng: float = 77.5946,
+                              dest_lat: float = 12.9352,
+                              dest_lng: float = 77.6245):
     """Test Routes API (computeRoutes)"""
     url = f"https://routes.googleapis.com/directions/v2:computeRoutes?key={api_key}"
     try:
@@ -562,8 +583,8 @@ def test_routes_computeroutes(api_key: str = Query(..., description="Google Maps
             "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
         }
         body = {
-            "origin": {"location": {"latLng": {"latitude": 37.419734, "longitude": -122.0827784}}},
-            "destination": {"location": {"latLng": {"latitude": 37.4220, "longitude": -122.0841}}},
+            "origin": {"location": {"latLng": {"latitude": origin_lat, "longitude": origin_lng}}},
+            "destination": {"location": {"latLng": {"latitude": dest_lat, "longitude": dest_lng}}},
             "travelMode": "DRIVE",
         }
         response = requests.post(url, data=json.dumps(body), headers=headers, **_REQUEST_KWARGS)
@@ -619,7 +640,7 @@ def test_gemini_files(api_key: str = Query(..., description="Google Maps API Key
 
 @app.get("/api/test/places/placedetails", response_model=APITest)
 def test_placedetails(api_key: str = Query(..., description="Google Maps API Key"),
-                     place_id: str = Query("ChIJN1t_tDeuEmsRUsoyG83frY4")):
+                     place_id: str = "ChIJN1t_tDeuEmsRUsoyG83frY4"):
     """Test Place Details API"""
     params = {"place_id": place_id, "key": api_key}
     url = f"https://maps.googleapis.com/maps/api/place/details/json?{urlencode(params)}"
@@ -651,8 +672,8 @@ def test_placedetails(api_key: str = Query(..., description="Google Maps API Key
 
 @app.get("/api/test/roads/speedlimit", response_model=APITest)
 def test_speedlimit(api_key: str = Query(..., description="Google Maps API Key"),
-                   latitude: float = Query(12.9716),
-                   longitude: float = Query(77.5946)):
+                   latitude: float = 12.9716,
+                   longitude: float = 77.5946):
     """Test Speed Limits API"""
     url = f"https://roads.googleapis.com/v1/speedLimits?path={latitude},{longitude}&key={api_key}"
     try:
@@ -720,16 +741,21 @@ def test_routematrix(api_key: str,
                     dest_lat: float = 12.9352,
                     dest_lng: float = 77.6245):
     """Test Routes API - computeRouteMatrix"""
-    url = f"https://routes.googleapis.com/directions/v2:computeRouteMatrix?key={api_key}"
+    url = f"https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix?key={api_key}"
     try:
         payload = {
-            "origins": [{"location": {"latLng": {"latitude": origin_lat, "longitude": origin_lng}}}],
-            "destinations": [{"location": {"latLng": {"latitude": dest_lat, "longitude": dest_lng}}}],
+            "origins": [{"waypoint": {"location": {"latLng": {"latitude": origin_lat, "longitude": origin_lng}}}}],
+            "destinations": [{"waypoint": {"location": {"latLng": {"latitude": dest_lat, "longitude": dest_lng}}}}],
+            "travelMode": "DRIVE",
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "X-Goog-FieldMask": "originIndex,destinationIndex,duration,distanceMeters,status",
         }
         response = requests.post(
             url,
             data=json.dumps(payload),
-            headers={"Content-Type": "application/json"},
+            headers=headers,
             **_REQUEST_KWARGS,
         )
         if response.status_code == 200 and "error" not in response.text:
@@ -758,8 +784,8 @@ def test_routematrix(api_key: str,
 
 @app.get("/api/test/aerialview", response_model=APITest)
 def test_aerialview(api_key: str = Query(..., description="Google Maps API Key"),
-                   latitude: float = Query(12.9716),
-                   longitude: float = Query(77.5946)):
+                   latitude: float = 12.9716,
+                   longitude: float = 77.5946):
     """Test Aerial View API"""
     url = f"https://aerialview.googleapis.com/v1/videos:lookupVideo?location.latitude={latitude}&location.longitude={longitude}&key={api_key}"
     try:
